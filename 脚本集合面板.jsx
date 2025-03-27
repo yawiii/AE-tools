@@ -2,8 +2,15 @@
 // 创建一个可持久化的脚本管理面板
 
 (function(thisObj) {
+    // 获取用户Documents文件夹路径
+    var userDataFolder = Folder.myDocuments.fsName + "/Adobe/After Effects 2025";
+    // 确保目录存在
+    var folder = new Folder(userDataFolder);
+    if (!folder.exists) {
+        folder.create();
+    }
     // 配置文件路径
-    var CONFIG_FILE = File($.fileName).parent.fsName + "/scriptsbox_config.json";
+    var CONFIG_FILE = userDataFolder + "/scriptsbox_config.json";
     
     // 创建主面板，支持作为独立窗口或嵌入面板
     var mainPanel = (thisObj instanceof Panel) ? thisObj : new Window("palette", "脚本管理面板", undefined, {resizeable: true, maximizeButton: true, minimizeButton: true});
@@ -89,7 +96,7 @@
 
         // 浏览文件
         browseButton.onClick = function() {
-            var file = File.openDialog("选择脚本文件", "JavaScript:*.jsx;*.js");
+            var file = File.openDialog("选择脚本文件", "JavaScript:*.jsx;*.js;*.jsxbin;*.aex");
             if (file) {
                 scriptPathInput.text = file.fsName;
             }
