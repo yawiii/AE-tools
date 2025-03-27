@@ -2,6 +2,24 @@
 // 创建一个可持久化的脚本管理面板
 
 (function(thisObj) {
+    // 添加Array.isArray的polyfill
+    if (!Array.isArray) {
+        Array.isArray = function(arg) {
+            return Object.prototype.toString.call(arg) === '[object Array]';
+        };
+    }
+    
+    // 自定义函数检查是否为数组
+    function isValidArray(obj) {
+        try {
+            return obj != null && 
+                   typeof obj === 'object' && 
+                   (Array.isArray(obj) || obj.constructor === Array || obj instanceof Array);
+        } catch(e) {
+            return false;
+        }
+    }
+
     // 获取用户Documents文件夹路径
     var userDataFolder = Folder.myDocuments.fsName + "/Adobe/After Effects 2025";
     // 确保目录存在
@@ -146,16 +164,25 @@
                 var jsonStr = configFile.read();
                 configFile.close();
                 
-                if (!jsonStr || jsonStr.length === 0) {
+                if (!jsonStr || jsonStr === "") {
                     return [];
                 }
                 
-                // 移除可能存在的 BOM 和空白字符
-                jsonStr = jsonStr.replace(/^\uFEFF/, '').trim();
+                // 手动移除BOM和空白字符
+                if (jsonStr.charCodeAt(0) === 0xFEFF) {
+                    jsonStr = jsonStr.substring(1);
+                }
+                // 移除开头和结尾的空白字符
+                while (jsonStr.charAt(0) === ' ' || jsonStr.charAt(0) === '\t' || jsonStr.charAt(0) === '\n' || jsonStr.charAt(0) === '\r') {
+                    jsonStr = jsonStr.substring(1);
+                }
+                while (jsonStr.charAt(jsonStr.length - 1) === ' ' || jsonStr.charAt(jsonStr.length - 1) === '\t' || jsonStr.charAt(jsonStr.length - 1) === '\n' || jsonStr.charAt(jsonStr.length - 1) === '\r') {
+                    jsonStr = jsonStr.substring(0, jsonStr.length - 1);
+                }
                 
                 try {
-                    var config = JSON.parse(jsonStr);
-                    return Array.isArray(config) ? config : [];
+                    var config = eval("(" + jsonStr + ")");
+                    return isValidArray(config) ? config : [];
                 } catch(e) {
                     alert("配置文件解析失败，将重置配置文件\n错误信息: " + e.toString());
                     return [];
@@ -179,7 +206,7 @@
             }
             
             // 确保 config 是数组
-            config = Array.isArray(config) ? config : [];
+            config = isValidArray(config) ? config : [];
             
             configFile.encoding = "UTF-8";  // 设置编码
             configFile.open('w');
@@ -213,7 +240,7 @@
             // 修改脚本按钮属性
             var scriptButton = scriptGroup.add("button");
             scriptButton.text = script.name;
-            scriptButton.preferredSize = [200, 40];   
+            scriptButton.preferredSize = [200, 30];   
             scriptButton.alignment = ["fill", "center"];
             scriptButton.justify = "left";
             scriptButton.helpTip = script.description || "";
