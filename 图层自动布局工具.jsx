@@ -64,6 +64,7 @@
             dropdownGroup.spacing = 5;
             var layerDropdown = dropdownGroup.add("dropdownlist", [0, 0, 200, 25]);
             var refreshLayerList = dropdownGroup.add("button", undefined, "↻");
+            refreshLayerList.preferredSize = [26, 26]; // 设置按钮宽度为30，高度为30
 
             // 封装填充下拉列表的函数
             function populateLayerDropdown() {
