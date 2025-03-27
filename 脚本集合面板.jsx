@@ -122,7 +122,7 @@
         addWindow.show();
     };
 
-    // 读取配置文件
+    // 修改 loadConfig 函数
     function loadConfig() {
         try {
             var configFile = File(CONFIG_FILE);
@@ -134,13 +134,23 @@
             }
             
             if (configFile.exists) {
+                configFile.encoding = "UTF-8";  // 设置编码
                 configFile.open('r');
                 var jsonStr = configFile.read();
                 configFile.close();
+                
+                if (!jsonStr || jsonStr.length === 0) {
+                    return [];
+                }
+                
+                // 移除可能存在的 BOM 和空白字符
+                jsonStr = jsonStr.replace(/^\uFEFF/, '').trim();
+                
                 try {
-                    return JSON.parse(jsonStr) || [];
+                    var config = JSON.parse(jsonStr);
+                    return Array.isArray(config) ? config : [];
                 } catch(e) {
-                    alert("配置文件格式错误，将重置配置文件");
+                    alert("配置文件解析失败，将重置配置文件\n错误信息: " + e.toString());
                     return [];
                 }
             }
@@ -151,19 +161,24 @@
         }
     }
 
-    // 保存配置文件
+    // 修改 saveConfig 函数
     function saveConfig(config) {
         try {
             var configFile = File(CONFIG_FILE);
             var configFolder = configFile.parent;
             
-            // 确保配置文件所在目录存在
             if (!configFolder.exists) {
                 configFolder.create();
             }
             
+            // 确保 config 是数组
+            config = Array.isArray(config) ? config : [];
+            
+            configFile.encoding = "UTF-8";  // 设置编码
             configFile.open('w');
-            configFile.write(JSON.stringify(config || []));
+            // 格式化 JSON 字符串以便于阅读
+            var jsonStr = JSON.stringify(config, null, 2);
+            configFile.write(jsonStr);
             configFile.close();
         } catch(e) {
             alert("保存配置文件时出错: " + e.toString());
